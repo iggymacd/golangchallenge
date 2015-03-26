@@ -1,7 +1,9 @@
 package drum
 
 import (
-	"encoding/hex"
+	"bytes"
+	"encoding/binary"
+	//"encoding/hex"
 	"fmt"
 	"io/ioutil"
 )
@@ -12,30 +14,38 @@ import (
 // TODO: implement
 func DecodeFile(path string) (*Pattern, error) {
 	d, err := ioutil.ReadFile(path)
+
 	if err != nil {
 		fmt.Println(err)
 		return nil, nil
 	}
-	p := &Pattern{content: `Saved with HW Version: 0.808-alpha
-Tempo: 120
-(0) kick	|x---|x---|x---|x---|
-(1) snare	|----|x---|----|x---|
-(2) clap	|----|x-x-|----|----|
-(3) hh-open	|--x-|--x-|x-x-|--x-|
-(4) hh-close	|x---|x---|----|x--x|
-(5) cowbell	|----|----|--x-|----|
-`, data: d}
-	return p, nil
+	var p Pattern
+	buf := bytes.NewReader(d)
+	err = binary.Read(buf, binary.BigEndian, &p)
+	if err != nil {
+		fmt.Println("binary.Read failed:", err)
+	}
+	/*p := &Pattern{content: `Saved with HW Version: 0.808-alpha
+	Tempo: 120
+	(0) kick	|x---|x---|x---|x---|
+	(1) snare	|----|x---|----|x---|
+	(2) clap	|----|x-x-|----|----|
+	(3) hh-open	|--x-|--x-|x-x-|--x-|
+	(4) hh-close	|x---|x---|----|x--x|
+	(5) cowbell	|----|----|--x-|----|
+	`, data: d}*/
+	return &p, nil
 }
 
 // Pattern is the high level representation of the
 // drum pattern contained in a .splice file.
 // TODO: implement
 type Pattern struct {
-	content string
-	data    []byte
+	SPLICE  [6]byte
+	Size    int64
+	Version [32]byte
 }
 
 func (p Pattern) String() string {
-	return fmt.Sprint(hex.Dump(p.data)) //p.content)
+	return fmt.Sprint(p.Size) //p.content)
 }
